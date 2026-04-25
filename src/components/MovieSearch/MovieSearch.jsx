@@ -22,24 +22,15 @@ export const MovieSearch = ({ onSubmit, onChange, inputValue }) => {
 export default MovieSearch;
 
 export const StyledSearchbar = styled.div`
-  top: 0;
-  left: 0;
-  position: sticky;
-  z-index: 1100;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 64px;
-  padding-right: 24px;
-  padding-left: 24px;
-  padding-top: 12px;
-  padding-bottom: 12px;
-  color: #fff;
-  background-color: #3f51b5;
-  box-shadow: 0px 2px 4px -1px rgba(0, 0, 0, 0.2),
-    0px 4px 5px 0px rgba(0, 0, 0, 0.14), 0px 1px 10px 0px rgba(0, 0, 0, 0.12);
+  max-width: 500px;
+  margin: 15px auto 0;
 
-  gap: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+
+  border-radius: 10px;
+  overflow: hidden;
 `;
 
 export const SearchForm = styled.form`
@@ -47,15 +38,15 @@ export const SearchForm = styled.form`
   align-items: center;
   width: 100%;
   max-width: 600px;
-  background-color: #fff;
+  background-color: transparent;
   border-radius: 3px;
   overflow: hidden;
 `;
 
 export const SearchFormBtn = styled.button`
   font-family: monospace;
-  background-color: #f3f7fe;
-  color: #3b82f6;
+  background: transparent;
+  color: white;
   border: none;
   border-radius: 8px;
   width: 100px;
@@ -63,9 +54,7 @@ export const SearchFormBtn = styled.button`
   transition: 0.3s;
 
   &:hover {
-    background-color: #3b82f6;
-    box-shadow: 0 0 0 5px #3b83f65f;
-    color: #fff;
+    background: rgba(255, 255, 255, 0.2);
   }
 `;
 
