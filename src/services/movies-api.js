@@ -1,56 +1,64 @@
 import axios from 'axios';
 
-axios.defaults.baseURL = 'https://api.themoviedb.org/3/';
-
 const API_KEY = process.env.REACT_APP_TMDB_API_KEY;
 
+const moviesApi = axios.create({
+  baseURL: 'https://api.themoviedb.org/3',
+  params: {
+    api_key: API_KEY,
+    language: 'en-US',
+  },
+});
+
 export const fetchMoviesTrend = async () => {
-  const { data } = await axios.get('trending/movie/day', {
-    params: {
-      api_key: API_KEY,
-    },
-  });
-  // console.log(data);
-  return data.results;
+  const response = await moviesApi.get('/trending/movie/day');
+
+  return response.data.results ?? [];
 };
 
-export const fetchMoviesId = async id => {
-  const { data } = await axios.get(`/movie/${id}`, {
+export const fetchMoviesBySearch = async query => {
+  const normalizedQuery = query?.trim();
+
+  if (!normalizedQuery) {
+    return [];
+  }
+
+  const response = await moviesApi.get('/search/movie', {
     params: {
-      api_key: API_KEY,
+      query: normalizedQuery,
+      include_adult: false,
     },
   });
-  // console.log(data);
-  return data;
+
+  return response.data.results ?? [];
 };
 
-export const fetchMoviesReviews = async id => {
-  const { data } = await axios.get(`/movie/${id}/reviews`, {
-    params: {
-      api_key: API_KEY,
-    },
-  });
-  // console.log(data);
-  return data.results;
+export const fetchMoviesId = async movieId => {
+  if (!movieId) {
+    throw new Error('Movie ID is required');
+  }
+
+  const response = await moviesApi.get(`/movie/${movieId}`);
+
+  return response.data;
 };
 
-export const fetchMoviesCast = async id => {
-  const { data } = await axios.get(`/movie/${id}/credits`, {
-    params: {
-      api_key: API_KEY,
-    },
-  });
-  // console.log(data);
-  return data.cast;
+export const fetchMoviesCast = async movieId => {
+  if (!movieId) {
+    return [];
+  }
+
+  const response = await moviesApi.get(`/movie/${movieId}/credits`);
+
+  return response.data.cast ?? [];
 };
 
-export const fetchMoviesBySearch = async inputValue => {
-  const { data } = await axios.get(`search/movie`, {
-    params: {
-      api_key: API_KEY,
-      query: inputValue,
-    },
-  });
-  // console.log(data);
-  return data.results;
+export const fetchMoviesReviews = async movieId => {
+  if (!movieId) {
+    return [];
+  }
+
+  const response = await moviesApi.get(`/movie/${movieId}/reviews`);
+
+  return response.data.results ?? [];
 };
