@@ -2,6 +2,7 @@ import MovieSearch from '../components/MovieSearch/MovieSearch';
 import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation, useSearchParams } from 'react-router-dom';
 import { fetchMoviesBySearch } from 'services/movies-api';
+import Loader from 'components/Loader/Loader';
 import styled from 'styled-components';
 const imgLink = 'https://image.tmdb.org/t/p/w500';
 
@@ -11,27 +12,54 @@ const Movie = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const query = searchParams.get('query') || '';
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const updateQueryString = e => {
     setInputValue(e.target.value);
   };
 
   useEffect(() => {
-    if (query) {
-      setInputValue(query);
-      async function getSearchMovies() {
-        try {
-          const moviesDataNew = await fetchMoviesBySearch(query);
-          setMovies(moviesDataNew);
-        } catch (error) {
-          console.log(error);
-        }
-      }
-      getSearchMovies();
-    } else {
+    if (!query) {
       setInputValue('');
       setMovies([]);
+      setError(null);
+      return;
     }
+
+    setInputValue(query);
+
+    const getSearchMovies = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const results = await fetchMoviesBySearch(query);
+        setMovies(results);
+      } catch (error) {
+        setError('Unable to load movies. Please try again.');
+        setMovies([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getSearchMovies();
+    // if (query) {
+    //   setInputValue(query);
+    //   async function getSearchMovies() {
+    //     try {
+    //       const moviesDataNew = await fetchMoviesBySearch(query);
+    //       setMovies(moviesDataNew);
+    //     } catch (error) {
+    //       console.log(error);
+    //     }
+    //   }
+    //   getSearchMovies();
+    // } else {
+    //   setInputValue('');
+    //   setMovies([]);
+    // }
   }, [query]);
 
   // const onSubmit = event => {
@@ -55,32 +83,37 @@ const Movie = () => {
           onChange={updateQueryString}
           inputValue={inputValue}
         />
-        <StyledBox>
-          <StyledList>
-            {moviesData.map(movie => (
-              <li key={movie.id}>
-                <StyledNavLink
-                  state={{ from: location }}
-                  to={movie.id.toString()}
-                >
-                  {movie.poster_path === null ? (
+        {isLoading && <Loader />}
+        {error && <p>{error}</p>}
+        {!isLoading && !error && query && moviesData.length === 0 && (
+          <p>No movies found for "{query}".</p>
+        )}
+        {!isLoading && !error && moviesData.length > 0 && (
+          <StyledBox>
+            <StyledList>
+              {moviesData.map(movie => (
+                <li key={movie.id}>
+                  <StyledNavLink
+                    state={{ from: location }}
+                    to={movie.id.toString()}
+                  >
                     <img
-                      src={`https://upload.wikimedia.org/wikipedia/commons/c/c2/No_image_poster.png?20170513175923`}
-                      alt={movie.title}
+                      src={
+                        movie.poster_path
+                          ? `${imgLink}${movie.poster_path}`
+                          : 'https://upload.wikimedia.org/wikipedia/commons/c/c2/No_image_poster.png'
+                      }
+                      alt={`${movie.title} poster`}
+                      loading="lazy"
                     />
-                  ) : (
-                    <img
-                      src={`${imgLink + movie.poster_path}`}
-                      alt={movie.title}
-                    />
-                  )}
-                  <p>{movie.title}</p>
-                  <p>{movie.media_type}</p>
-                </StyledNavLink>
-              </li>
-            ))}
-          </StyledList>
-        </StyledBox>
+
+                    <p>{movie.title}</p>
+                  </StyledNavLink>
+                </li>
+              ))}
+            </StyledList>
+          </StyledBox>
+        )}
       </StyledContainer>
     </>
   );

@@ -1,6 +1,5 @@
 import { useHttp } from 'hooks/useHttp';
 import { Suspense, useRef } from 'react';
-// import React, { useEffect, useState } from 'react';
 import {
   NavLink,
   Outlet,
@@ -8,6 +7,7 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom';
+import Loader from 'components/Loader/Loader';
 import { fetchMoviesId } from 'services/movies-api';
 import styled from 'styled-components';
 
@@ -18,24 +18,23 @@ const MovieDetails = () => {
   const location = useLocation();
   const goBackRef = useRef(location.state?.from ?? '/');
 
-  const [movie] = useHttp(fetchMoviesId, movieId);
-
-  // const [movie, setMovie] = useState([]);
-
-  // useEffect(() => {
-  //   if (movieId) {
-  //     fetchMoviesId(movieId)
-  //       .then(res => setMovie(res))
-  //       .catch(error => {
-  //         console.error('Error fetching movie details:', error);
-  //         setMovie([]);
-  //       });
-  //   }
-  // }, [movieId]);
+  const { data: movie, error, isLoading } = useHttp(fetchMoviesId, movieId);
 
   const handleGoBack = () => {
     navigate(goBackRef.current);
   };
+
+  if (isLoading) {
+    return <Loader />;
+  }
+
+  if (error) {
+    return <h2>Unable to load movie details. Please try again.</h2>;
+  }
+
+  if (!movie) {
+    return <h2>Movie not found.</h2>;
+  }
 
   const {
     title,
@@ -47,14 +46,6 @@ const MovieDetails = () => {
     genres,
   } = movie;
   const releaseYear = release_date ? new Date(release_date).getFullYear() : '';
-
-  if (!movie || !movie.title) {
-    return <h1>Loading...</h1>;
-  }
-
-  if (!movie.id) {
-    return <h1>This film is not found</h1>;
-  }
 
   return (
     <StyledBox>
@@ -123,10 +114,15 @@ export const StyledButton = styled.button`
   background-color: rgba(17, 24, 39, 1);
   color: rgba(156, 163, 175, 1);
   padding: 1em 2em;
-  transition: box-shadow ease-in-out 0.3s, background-color ease-in-out 0.1s,
-    letter-spacing ease-in-out 0.1s, transform ease-in-out 0.1s;
+  transition:
+    box-shadow ease-in-out 0.3s,
+    background-color ease-in-out 0.1s,
+    letter-spacing ease-in-out 0.1s,
+    transform ease-in-out 0.1s;
   &:hover {
-    box-shadow: 6px 6px 13px #121212, -6px -6px 13px #303030;
+    box-shadow:
+      6px 6px 13px #121212,
+      -6px -6px 13px #303030;
     background-color: #6650aa;
     color: white;
   }
