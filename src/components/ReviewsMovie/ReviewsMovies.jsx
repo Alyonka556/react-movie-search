@@ -1,45 +1,91 @@
-import { useHttp } from 'hooks/useHttp';
-// import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchMoviesReviews } from 'services/movies-api';
+import styled from 'styled-components';
+
+import Loader from '../Loader/Loader';
+import { useHttp } from '../../hooks/useHttp';
+import { fetchMoviesReviews } from '../../services/movies-api';
 
 const ReviewsMovies = () => {
   const { movieId } = useParams();
 
-  const [reviews] = useHttp(fetchMoviesReviews, movieId);
+  const {
+    data: reviews,
+    error,
+    isLoading,
+  } = useHttp(fetchMoviesReviews, movieId);
 
-  // const [reviews, setReviews] = useState([]);
-
-  // useEffect(() => {
-  //   if (movieId) {
-  //     fetchMoviesReviews(movieId)
-  //       .then(res => setReviews(res))
-  //       .catch(error => {
-  //         console.error('Error fetching movie details:', error);
-  //         setReviews([]);
-  //       });
-  //   }
-  // }, [movieId]);
-
-  if (!reviews) {
-    return <h1>We don't have any revievs for this movie.</h1>;
+  if (isLoading) {
+    return <Loader />;
   }
+
+  if (error) {
+    return (
+      <StatusMessage role="alert">
+        Unable to load reviews. Please try again.
+      </StatusMessage>
+    );
+  }
+
+  if (!reviews || reviews.length === 0) {
+    return (
+      <StatusMessage>
+        We don&apos;t have any reviews for this movie.
+      </StatusMessage>
+    );
+  }
+
   return (
-    <div>
-      <ul>
-        {reviews.length === 0 ? (
-          <h2>We don't have any revievs for this movie.</h2>
-        ) : (
-          reviews?.map(item => (
-            <li key={item.id}>
-              <p>Author: {item.author}</p>
-              <p>{item.content}</p>
-            </li>
-          ))
-        )}
-      </ul>
-    </div>
+    <ReviewsList>
+      {reviews.map(review => (
+        <ReviewItem key={review.id}>
+          <Author>Author: {review.author || 'Anonymous'}</Author>
+          <ReviewText>{review.content}</ReviewText>
+        </ReviewItem>
+      ))}
+    </ReviewsList>
   );
 };
+
+const ReviewsList = styled.ul`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  margin: 0;
+  padding: 0;
+  list-style: none;
+`;
+
+const ReviewItem = styled.li`
+  padding: 20px;
+
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+
+  background-color: #ffffff;
+`;
+
+const Author = styled.p`
+  margin: 0 0 12px;
+
+  font-size: 18px;
+  font-weight: 700;
+  color: black;
+`;
+
+const ReviewText = styled.p`
+  margin: 0;
+
+  font-size: 16px;
+  line-height: 1.6;
+  color: black;
+`;
+
+const StatusMessage = styled.p`
+  margin: 32px 0;
+  font-size: 18px;
+  text-align: center;
+  color: black;
+`;
 
 export default ReviewsMovies;
