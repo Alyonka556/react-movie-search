@@ -1,35 +1,39 @@
-import MovieSearch from '../components/MovieSearch/MovieSearch';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, useLocation, useSearchParams } from 'react-router-dom';
-import { fetchMoviesBySearch } from 'services/movies-api';
-import Loader from 'components/Loader/Loader';
 import styled from 'styled-components';
-const imgLink = 'https://image.tmdb.org/t/p/w500';
 
-const Movie = () => {
+import MovieSearch from '../components/MovieSearch/MovieSearch';
+import Loader from '../components/Loader/Loader';
+import { fetchMoviesBySearch } from '../services/movies-api';
+
+const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+
+const FALLBACK_POSTER =
+  'https://upload.wikimedia.org/wikipedia/commons/c/c2/No_image_poster.png';
+
+const Movies = () => {
   const [inputValue, setInputValue] = useState('');
-  const [moviesData, setMovies] = useState([]);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const location = useLocation();
-  const query = searchParams.get('query') || '';
+  const [movies, setMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const updateQueryString = e => {
-    setInputValue(e.target.value);
-  };
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+
+  const query = searchParams.get('query')?.trim() || '';
 
   useEffect(() => {
     if (!query) {
       setInputValue('');
       setMovies([]);
       setError(null);
+      setIsLoading(false);
       return;
     }
 
     setInputValue(query);
 
-    const getSearchMovies = async () => {
+    const loadMovies = async () => {
       setIsLoading(true);
       setError(null);
 
@@ -37,134 +41,146 @@ const Movie = () => {
         const results = await fetchMoviesBySearch(query);
         setMovies(results);
       } catch (error) {
-        setError('Unable to load movies. Please try again.');
+        console.error('Failed to load movies:', error);
         setMovies([]);
+        setError('Unable to load movies. Please try again.');
       } finally {
         setIsLoading(false);
       }
     };
 
-    getSearchMovies();
-    // if (query) {
-    //   setInputValue(query);
-    //   async function getSearchMovies() {
-    //     try {
-    //       const moviesDataNew = await fetchMoviesBySearch(query);
-    //       setMovies(moviesDataNew);
-    //     } catch (error) {
-    //       console.log(error);
-    //     }
-    //   }
-    //   getSearchMovies();
-    // } else {
-    //   setInputValue('');
-    //   setMovies([]);
-    // }
+    loadMovies();
   }, [query]);
 
-  // const onSubmit = event => {
-  //   event.preventDefault();
-  //   setSearchParams({ query: inputValue });
-  // };
-  const onSubmit = event => {
+  const handleInputChange = event => {
+    setInputValue(event.target.value);
+  };
+
+  const handleSubmit = event => {
     event.preventDefault();
-    if (!inputValue) {
+
+    const normalizedQuery = inputValue.trim();
+
+    if (!normalizedQuery) {
       setSearchParams({});
-    } else {
-      setSearchParams({ query: inputValue });
+      return;
     }
+
+    setSearchParams({ query: normalizedQuery });
   };
 
   return (
-    <>
-      <StyledContainer>
-        <MovieSearch
-          onSubmit={onSubmit}
-          onChange={updateQueryString}
-          inputValue={inputValue}
-        />
-        {isLoading && <Loader />}
-        {error && <p>{error}</p>}
-        {!isLoading && !error && query && moviesData.length === 0 && (
-          <p>No movies found for "{query}".</p>
-        )}
-        {!isLoading && !error && moviesData.length > 0 && (
-          <StyledBox>
-            <StyledList>
-              {moviesData.map(movie => (
-                <li key={movie.id}>
-                  <StyledNavLink
-                    state={{ from: location }}
-                    to={movie.id.toString()}
-                  >
-                    <img
-                      src={
-                        movie.poster_path
-                          ? `${imgLink}${movie.poster_path}`
-                          : 'https://upload.wikimedia.org/wikipedia/commons/c/c2/No_image_poster.png'
-                      }
-                      alt={`${movie.title} poster`}
-                      loading="lazy"
-                    />
+    <StyledContainer>
+      <MovieSearch
+        onSubmit={handleSubmit}
+        onChange={handleInputChange}
+        inputValue={inputValue}
+      />
 
-                    <p>{movie.title}</p>
-                  </StyledNavLink>
-                </li>
-              ))}
-            </StyledList>
-          </StyledBox>
-        )}
-      </StyledContainer>
-    </>
+      {isLoading && <Loader />}
+
+      {!isLoading && error && (
+        <StatusMessage role="alert">{error}</StatusMessage>
+      )}
+
+      {!isLoading && !error && query && movies.length === 0 && (
+        <StatusMessage>No movies found for &quot;{query}&quot;.</StatusMessage>
+      )}
+
+      {!isLoading && !error && movies.length > 0 && (
+        <MovieList>
+          {movies.map(movie => {
+            const movieTitle = movie.title || movie.name || 'Untitled movie';
+
+            const posterUrl = movie.poster_path
+              ? `${IMAGE_BASE_URL}${movie.poster_path}`
+              : FALLBACK_POSTER;
+
+            return (
+              <MovieItem key={movie.id}>
+                <StyledNavLink
+                  to={movie.id.toString()}
+                  state={{ from: location }}
+                >
+                  <MoviePoster
+                    src={posterUrl}
+                    alt={`${movieTitle} poster`}
+                    loading="lazy"
+                  />
+
+                  <MovieTitle>{movieTitle}</MovieTitle>
+                </StyledNavLink>
+              </MovieItem>
+            );
+          })}
+        </MovieList>
+      )}
+    </StyledContainer>
   );
 };
 
-const StyledContainer = styled.div`
+const StyledContainer = styled.main`
   width: 100%;
 `;
 
-const StyledBox = styled.div`
+const MovieList = styled.ul`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+
+  margin: 0;
+  padding: 40px;
   list-style: none;
-  padding: 40px 40px;
+
+  @media screen and (max-width: 767px) {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    padding: 24px 16px;
+  }
 `;
 
-const StyledList = styled.ul`
-  list-style: none;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 10px;
-  li {
-    overflow: hidden;
-    display: flex;
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-
-      transition: all 0.5s ease-in-out;
-      &:hover {
-        transform: scale(1.03);
-      }
-    }
-  }
+const MovieItem = styled.li`
+  overflow: hidden;
+  border-radius: 8px;
 `;
 
 const StyledNavLink = styled(NavLink)`
-  width: 100%;
-  padding: 30px 40px;
   display: flex;
+  height: 100%;
   flex-direction: column;
+
   color: white;
-  margin: 0 auto;
-  &:active {
+  text-decoration: none;
+
+  transition:
+    color 250ms ease,
+    transform 250ms ease;
+
+  &:hover,
+  &:focus {
     color: #303f9f;
-    text-decoration: underline;
-  }
-  &:hover {
-    color: #303f9f;
-    text-decoration: underline;
+    transform: translateY(-4px);
   }
 `;
 
-export default Movie;
+const MoviePoster = styled.img`
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+`;
+
+const MovieTitle = styled.p`
+  margin: 12px 0 0;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+`;
+
+const StatusMessage = styled.p`
+  margin: 40px 16px;
+  font-size: 20px;
+  text-align: center;
+`;
+
+export default Movies;
