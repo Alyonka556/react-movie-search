@@ -83,7 +83,7 @@ const MovieDetails = () => {
         <MovieInformation>
           <MovieTitle>
             {movieTitle}
-            {releaseYear && <Year> ({releaseYear})</Year>}
+            {releaseYear ? <Year> ({releaseYear})</Year> : null}
           </MovieTitle>
 
           <InformationSection>
@@ -149,7 +149,7 @@ const BackButton = styled.button`
   font-weight: 600;
 
   color: white;
-  background-color: #303f9f;
+  /* background-color: #303f9f; */
   cursor: pointer;
 
   transition:
@@ -194,7 +194,6 @@ const MovieTitle = styled.h1`
 
   font-size: 36px;
   line-height: 1.2;
-  color: black;
 
   @media screen and (max-width: 767px) {
     font-size: 28px;
@@ -212,7 +211,6 @@ const InformationSection = styled.section`
 const SectionTitle = styled.h2`
   margin: 0 0 8px;
   font-size: 22px;
-  color: black;
 `;
 
 const SectionText = styled.p`
@@ -220,7 +218,6 @@ const SectionText = styled.p`
 
   font-size: 18px;
   line-height: 1.6;
-  color: black;
 `;
 
 const GenresList = styled.ul`
@@ -240,7 +237,7 @@ const GenreItem = styled.li`
 
   font-size: 16px;
   color: white;
-  background-color: #303f9f;
+  /* background-color: #303f9f; */
 `;
 
 const AdditionalSection = styled.section`
@@ -252,7 +249,6 @@ const AdditionalSection = styled.section`
 const AdditionalTitle = styled.h2`
   margin: 0 0 16px;
   font-size: 24px;
-  color: black;
 `;
 
 const Navigation = styled.nav`
@@ -264,7 +260,6 @@ const Navigation = styled.nav`
 const AdditionalLink = styled(NavLink)`
   font-size: 20px;
   font-weight: 600;
-  color: black;
   text-decoration: none;
 
   &.active,

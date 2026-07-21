@@ -91,7 +91,7 @@ const ActorName = styled.p`
 
   font-size: 17px;
   font-weight: 700;
-  color: black;
+
 `;
 
 const CharacterName = styled.p`
@@ -99,7 +99,6 @@ const CharacterName = styled.p`
 
   font-size: 15px;
   line-height: 1.4;
-  color: black;
 `;
 
 const StatusMessage = styled.p`
@@ -107,7 +106,6 @@ const StatusMessage = styled.p`
 
   font-size: 18px;
   text-align: center;
-  color: black;
 `;
 
 export default CastMovies;
